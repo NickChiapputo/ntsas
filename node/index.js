@@ -202,8 +202,6 @@ client.on("message", async function(message)
 			return;
 		}
 
-
-		console.log( "Link request matches." );
 		
 		// Search for the channel link request and verify it is an existing channel.
 		let newChannelID = args[ 1 ].substring( 2, args[ 1 ].length - 1 );
@@ -215,22 +213,17 @@ client.on("message", async function(message)
 			return;
 		}
 
-		console.log( `Found channel. ${newChannelID}` );
-
 
 		// Check if the channel is in the current list of channels.
 		if( channelIDs.includes( newChannelID ) )
 		{
 			console.log( `Channel ${args[ 1 ]} already linked.` );
 			message.channel.send( `Channel ${args[ 1 ]} already linked.` );
-			// return;
+			return;
 
 
 			// TODO: Update channel with new data instead of returning error message.
 		}
-
-
-		console.log( `Channel Topic: ${newMessageChannel.topic}` );
 
 
 		// Verify that the channel is bridged with a Hubs room by
@@ -394,22 +387,133 @@ client.on("message", async function(message)
 		console.log( response );
 		message.channel.send( response );
 	}
-	else if( args[ 0 ] === "test" )
+	else if( args[ 0 ] === "update" )
 	{
-		let attachment = message.attachments.first();
-		if( attachment )
+		// USAGE: !ntsas update <channel-name> <field-to-update> <new-value>
+		// <new-value> is an attachment if <field-to-update> = image
+		let validFields = [ "name", "image", "threshold" ];
+
+		console.log( "Received update request." );
+
+
+		// Verify the channel is in valid format.
+		if( !args[ 1 ] || !args[ 1 ].match( /<#[0-9]{18}>/ ) )
 		{
-			message.reply( `Attachment Found.\n${attachment.url}` );
-			message.reply( `Filename: ${attachment.name}` )
+			console.log( `Invalid channel.\n'${args[ 1 ]}'` );
+			message.channel.send( 'Please provide a valid channel.\n\nUsage:\n> **`!ntsas link <channel> <room_name> <threshold>`**' );
+			return;
+		}
+
+		
+		// Search for the channel link request and verify it is an existing channel.
+		let newChannelID = args[ 1 ].substring( 2, args[ 1 ].length - 1 );
+		let newMessageChannel = undefined;
+		if( !(newMessageChannel = client.channels.cache.get( newChannelID ) ) )
+		{
+			console.log( `Unable to find channel. '${args[ 1 ]}'` );
+			message.channel.send( `Sorry! I was unable to find the channel ${args[ 1 ]}` );
+			return;
+		}
+
+
+		// Verify the field to update is valid.
+		if( !args[ 2 ] || !validFields.includes( args[ 2 ] ) )
+		{
+			console.log( `Invalid field to update. '${args[ 2 ]}'` );
+			message.channel.send( `Invalid field to update. '${args[ 2 ]}'` );
+			return;
+		}
+
+
+		// Verify the new value exists (if not image type)
+		if( !args[ 2 ] && args[ 1 ] !== 'image' )
+		{
+			console.log( 'No updated value.' );
+			message.channel.send( 'No updated value.' );
+			return;
+		}
+
+
+		// If update type is threshold, verify valid threshold.
+		if( args[ 2 ] === 'threshold' && !args[ 3 ].match( /[0-9]+/ ) )
+		{
+			console.log( `Invalid threshold.\n'${args[ 2 ]}'` );
+			message.channel.send( 'Please provide a valid threshold.' )
+			return;
+		}
+
+
+		// If update type is image, verify attachment is found.
+		let attachment = message.attachments.first();
+		if( args[ 2 ] === 'image' && !attachment )
+		{
+			console.log( 'No attachment found.' );
+			message.channel.send( 'No attachment found.' );
+			return;
+		}
+
+
+		// If update type is image and attachment is found, verify it is .png.
+		if( args[ 2 ] === 'image' && !attachment.name.endsWith( '.png' ) )
+		{
+			console.log( 'Image attachment is not a png.' );
+			message.channel.send( 'Please provide a png attachment.' );
+			return;
+		}
+
+
+		// Get Hubs room URL from selected channel topic.
+		let url = newMessageChannel.topic + ( newMessageChannel.topic.endsWith( '/' ) ? '' : '/' );
+
+
+		// Create the update object based on the update type.
+		let update = {};
+		if( args[ 2 ] === 'name' )
+		{
+			// Get the name of the room by combining the remaining arguments.
+			// Need to use all arguments to allow for spaces in the room name.
+			let name = '';
+			for( i = 3; i < args.length - 1; i++ )
+			{
+				name += args[ i ] + " ";
+			}
+			name += args[ args.length - 1 ];
+
+			update.name = name;
+		}
+		else if( args[ 2 ] === 'image' )
+		{
+			// Check to make sure we won't override the default image.
+			if( attachment.name === 'default.png' )
+			{
+				attachment.name = 'default(1).png';
+			}
+
+
+			// TODO check if file exists. If so, change name.
+
+
+			update.image = `https://ieeeunt.tk/ntsas21_hubs/media/${attachment.name}`;
 
 			const file = fs.createWriteStream( `../html/ntsas21_hubs/media/${attachment.name}` );
 			file.on( 'finish', () => { file.close(); } );
 			const request = https.get( attachment.url, response => { response.pipe( file ); } );
 		}
-		else
+		else if( args[ 2 ] === 'threshold' )
 		{
-			message.reply( "No attachment." );
+			update.threshold = parseInt( args[ 3 ] );
 		}
+
+
+		let updatedRoom = ( await mongoLib.updateHubsMany( url, update ) ).value;
+		console.log( JSON.stringify( updatedRoom, null, 2 ) );
+		let response = `Updated Room:\n` +
+						`**Name:** ${updatedRoom.name}\n` +
+						`**Threshold:** ${updatedRoom.threshold}\n` +
+						`**Preview Image:** ${updatedRoom.image}\n` +
+						`**Channel:** ${updatedRoom.channelID}`;
+		console.log( response );
+		message.channel.send( response );
 	}
 	else
 	{
@@ -421,6 +525,8 @@ client.on("message", async function(message)
 					"Add a new Hubs-connected channel to the checking list and name the room. Provide an attachment .png image to the message to specify a preview image for the website.\n\n" +
 			"**`!ntsas unlink <channel>`**\n" + 
 					"Remove a Hubs-connected channel from the checking list.\n\n" +
+			"**`!ntsas update <channel> <field-to-update> <new-value>`**\n" + 
+					"Updated a Hubs room information. Valid values for <field-to-update> are `name`, `image`, and `threshold`. If `image`, provide an attachment and <new-value> can be blank.\n\n" +
 			"**`!ntsas list`**\n" + 
 					"List the channels currently being watched.\n\n" +
 			"**`!ntsas status`**\n" + 
@@ -484,25 +590,18 @@ client.on( "ready", async () => {
 		channelIDs.push( channelSearchResult[ i ].channelID );
 		messageChannels[ i ] = client.channels.cache.get( channelIDs[ i ] );
 		// messageChannels[ i ].send( "Ready!" );
-	}
-	
+	}	
 });
 
 
 // Function to run on an interval.
 function intervalFunc()
 {
-	//console.log( `Sending to ${messageChannels}` );
 	for( let i = 0; i < messageChannels.length; i++ )
 	{
-		let messageChannel = messageChannels[ i ];
-		messageChannel.send( '!hubs users' )
-			.then( message => lastMessage = message );
+		messageChannels[ i ].send( '!hubs users' );
 	}
 }
-
-
-// Create server to handle incoming requests.
 
 
 
