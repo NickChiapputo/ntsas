@@ -69,6 +69,9 @@
 * Also need to setup the reverse proxy location block to correctly proxy using SSL
 	* Before location block, use `set $upstream localhost:3000;` (change port to one listening in nodejs script)
 	* In location block, use
+	* Reference:
+		* https://medium.com/@mightywomble/how-to-set-up-nginx-reverse-proxy-with-lets-encrypt-8ef3fd6b79e5
+	* In location block, use
 
 ```
 proxy_pass_header Authorization;
@@ -83,5 +86,4 @@ client_max_body_size 0;
 proxy_read_timeout 36000s;
 proxy_redirect off;
 ```
-	* Reference:
-		* https://medium.com/@mightywomble/how-to-set-up-nginx-reverse-proxy-with-lets-encrypt-8ef3fd6b79e5
+
