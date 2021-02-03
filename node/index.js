@@ -51,7 +51,7 @@ client.on("message", async function(message)
 			let url = messageParts[ 0 ] + ':' + messageParts[ 1 ];
 			url = url.substring( 25, 32 );
 			let numUsers = messageParts[ 2 ].split( ',' ).length;
-			console.log( ` \nHubs Room URL: ${url}\nNumber of Users: ${numUsers}` );
+			// console.log( ` \nHubs Room URL: ${url}\nNumber of Users: ${numUsers}` );
 		
 
 			// Delete last request message and current user update
@@ -76,7 +76,7 @@ client.on("message", async function(message)
 			// There are no users in the current room.
 
 			let url = message.content.substring( 48, 55 );
-			console.log( ` \nHubs Room URL: ${url}\nNumber of Users: 0` );
+			// console.log( ` \nHubs Room URL: ${url}\nNumber of Users: 0` );
 
 
 			// Delete last request message and current user update
@@ -472,7 +472,7 @@ client.on("message", async function(message)
 
 
 		// Get Hubs room URL from selected channel topic.
-		let url = newMessageChannel.topic.substring( 26, 32 );
+		let url = newMessageChannel.topic.substring( 25, 32 );
 
 
 		// Create the update object based on the update type.
