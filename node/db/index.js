@@ -35,7 +35,7 @@ const hubsOccCollection = 'occupancy';
 module.exports = {
 	updateHubsOccupancy: async function( url, occ )
 	{
-		console.log( `(${getTimeStamp()}): Update Hubs Occupancy.` );
+		// console.log( `(${getTimeStamp()}): Update Hubs Occupancy.` );
 
 		const client = new MongoClient( dburl, mongoClientOptions );
 
@@ -84,7 +84,7 @@ module.exports = {
 
 	getHubsOccupancy: async function()
 	{
-		console.log( `(${getTimeStamp()}): Get Hubs Occupancy.` );
+		// console.log( `(${getTimeStamp()}): Get Hubs Occupancy.` );
 
 		const client = new MongoClient( dburl, mongoClientOptions );
 
@@ -92,17 +92,19 @@ module.exports = {
 		try
 		{
 			await client.connect();
-			console.log( `Successfully connected to MongoDB.` );
+			// console.log( `Successfully connected to MongoDB.` );
 
 
 			// Retrieve the collection from the database.
 			let collection = client.db( hubsDbName ).collection( hubsOccCollection );
 
-			console.log( `Succesfully retrieved ${hubsDbName} ${hubsOccCollection} collection.` );
+			// console.log( `Succesfully retrieved ${hubsDbName} ${hubsOccCollection} collection.` );
 
 
 			// Query all documents in collection.
-			let query = {};
+			let query = {
+				watching: 1
+			};
 			let options = { 
 				projection: { "_id": 0 } 
 			};
