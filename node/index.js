@@ -49,9 +49,9 @@ client.on("message", async function(message)
 			
 			let messageParts = message.content.substring( 20 ).split( ':' );
 			let url = messageParts[ 0 ] + ':' + messageParts[ 1 ];
-			url = url.substring( 0, url.length - 1 );
+			url = url.substring( 25, 32 );
 			let numUsers = messageParts[ 2 ].split( ',' ).length;
-			// console.log( ` \nHubs Room URL: ${url}\nNumber of Users: ${numUsers}` );
+			console.log( ` \nHubs Room URL: ${url}\nNumber of Users: ${numUsers}` );
 		
 
 			// Delete last request message and current user update
@@ -75,8 +75,8 @@ client.on("message", async function(message)
 		{
 			// There are no users in the current room.
 
-			let url = message.content.substring( 23, message.content.length - 2 );
-			// console.log( ` \nHubs Room URL: ${url}\nNumber of Users: 0` );
+			let url = message.content.substring( 48, 55 );
+			console.log( ` \nHubs Room URL: ${url}\nNumber of Users: 0` );
 
 
 			// Delete last request message and current user update
@@ -291,18 +291,28 @@ client.on("message", async function(message)
 
 
 		// Update the watching flag, the name of the room, the channel ID, and the image URL in the database.
-		// You HAVE TO ADD A TRAILING '/'. The topic URL does not terminate in one.
-		// Since the URL field is a unique key, it must be exactly the same as the link
-		// sent by the Hubs bot later on, which contains the trailing slash. We use here a ternary
-		// just in case this is changed in the future.
-		let url = newMessageChannel.topic + ( newMessageChannel.topic.endsWith( '/' ) ? '' : '/' );
-		mongoLib.updateHubsMany( url, { watching: 1, name: name, channelID: newChannelID, threshold: threshold, image: imageURL } );
+		// For the URL, we only take the room ID value. This is because the full URL can be changed
+		// by room moderators without notice. The room ID will always stay the same and the format
+		// of a Hubs room URL will always be https://hubs.mozilla.com/<roomID>/
+		// The room name after the final / is not necessary to connect to the room.
+		let url = newMessageChannel.topic.substring( 25, 32 );
+		let update = {
+			watching: 1,
+			name: name,
+			channelID: newChannelID,
+			threshold: threshold,
+			image: imageURL
+		}
+		let upsert = true;
+
+		// Update the room, or create a new one (upsert = true) if one does not exist with the provided room URL ID.
+		let result = ( await mongoLib.updateHubsMany( url, update, upsert ) ).value;
 
 		let response = `Now checking channel ${args[ 1 ]} for room '${name}' with threshold ${threshold}. Preview image set to: ${imageURL}.\n\nCurrent channel list:\n`
 		for( let i = 0; i < channelIDs.length; i++ )
 			response += `<#${channelIDs[ i ]}>\n`;
 		console.log( response );
-		message.channel.send( response );
+		message.channel.send( response + `\n\n${JSON.stringify( result, null, 2 )}` );
 
 		return;
 	}
@@ -345,7 +355,7 @@ client.on("message", async function(message)
 			// Since the URL field is a unique key, it must be exactly the same as the link
 			// sent by the Hubs bot later on, which contains the trailing slash. We use here a ternary
 			// just in case this is changed in the future.
-			let url = newMessageChannel.topic + ( newMessageChannel.topic.endsWith( '/' ) ? '' : '/' );
+			let url = newMessageChannel.topic.substring( 25, 32 );
 			mongoLib.updateRoomWatching( url, 0 );
 
 
@@ -367,7 +377,7 @@ client.on("message", async function(message)
 		let occupancyResults = await mongoLib.getHubsOccupancy();
 		for( let i = 0; i < occupancyResults.length; i++ )
 		{
-			response += `<#${occupancyResults[ i ].channelID}> - ${occupancyResults[ i ].url}\n`;
+			response += `<#${occupancyResults[ i ].channelID}> - https://hubs.mozilla.com/${occupancyResults[ i ].url}/\n`;
 		}
 		console.log( response );
 		message.channel.send( response );
@@ -464,7 +474,7 @@ client.on("message", async function(message)
 
 
 		// Get Hubs room URL from selected channel topic.
-		let url = newMessageChannel.topic + ( newMessageChannel.topic.endsWith( '/' ) ? '' : '/' );
+		let url = newMessageChannel.topic.substring( 26, 32 );
 
 
 		// Create the update object based on the update type.
@@ -506,7 +516,9 @@ client.on("message", async function(message)
 		}
 
 
-		let updatedRoom = ( await mongoLib.updateHubsMany( url, update ) ).value;
+		// Update the room with matching room URL ID. Upsert = false so we do not
+		// create a new room if we don't have a previous entry fo rit.
+		let updatedRoom = ( await mongoLib.updateHubsMany( url, update, false ) ).value;
 		console.log( JSON.stringify( updatedRoom, null, 2 ) );
 		let response = `Updated Room:\n` +
 						`**Name:** ${updatedRoom.name}\n` +

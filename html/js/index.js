@@ -39,11 +39,10 @@ var intervalFunc = function()
 			{
 				// Get the room information.
 				room = obj[ i ];
-				url = room.url;
 				name = room.name;
 				users = room.users;
 				threshold = room.threshold;
-				roomIDlist[ i ] = url.substring( 25, 32 );
+				roomIDlist[ i ] = room.url;
 				imageURL = room.image ? room.image : "https://ieeeunt.tk/ntsas21_hubs/media/default.png";
 
 
@@ -71,13 +70,13 @@ var intervalFunc = function()
 
 				flexItem.innerHTML = 
 					`<div class="roomInfo">${name}<br />${users} / ${threshold} Users</div>` +
-					`<div class="roomBG"><a href="${url}"></a></div>`;
+					`<div class="roomBG"><a href="https://hubs.mozilla.com/${roomIDlist[ i ]}/"></a></div>`;
 				// flexItem.setAttribute( "style", `background-color: ${getRandomColor()};` );
 
 
 				// Update the debug output on the right side panel.
 				updateDiv.innerHTML += 
-					`<a href="${room.url}"><b>${room.name}</b></a>: ` +
+					`<a href="https://hubs.mozilla.com/${roomIDlist[ i ]}/"><b>${name}</b></a>: ` +
 					`${users} / ${threshold} Users<br />`;
 			}
 

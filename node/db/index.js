@@ -176,7 +176,7 @@ module.exports = {
 	},
 
 
-	updateHubsMany: async function( url, updates )
+	updateHubsMany: async function( url, updates, upsert )
 	{
 		console.log( `(${getTimeStamp()}): Update Hubs Occupancy.` );
 
@@ -203,7 +203,7 @@ module.exports = {
 			let options = {						// Create options for update command.
 				returnOriginal: false,				// Don't return the old document.
 				returnNewDocument: true,			// Return the updated document.
-				upsert: true						// Create document if it doesn't exist.
+				upsert: upsert						// If true, create document if it doesn't exist.
 			};
 
 			// Retrieve the occupancy collection in the hubs database.
@@ -217,7 +217,7 @@ module.exports = {
 		{
 			if( !result )
 				console.log( `Error connecting to MongoDB.` );
-			
+			console.log( result );
 			await client.close();
 			return result;
 		}

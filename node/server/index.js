@@ -65,12 +65,12 @@ var serverAction = async function ( req, res )
 			}
 		}
 
-		console.log( `Redirecting to ${redir_url}` );
+		console.log( `Redirecting to https://hubs.mozilla.com/${redir_url}/` );
 
 
 		// Redirect to the Hubs room.
 		res.writeHead( 302, {
-			'Location': redir_url
+			'Location': `https://hubs.mozilla.com/${redir_url}/`
 		});
 		res.end();
 		return;
