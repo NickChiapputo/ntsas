@@ -178,7 +178,7 @@ module.exports = {
 
 	updateHubsMany: async function( url, updates, upsert )
 	{
-		console.log( `(${getTimeStamp()}): Update Hubs Occupancy.` );
+		// console.log( `(${getTimeStamp()}): Update Hubs Occupancy.` );
 
 		const client = new MongoClient( dburl, mongoClientOptions );
 
@@ -226,7 +226,7 @@ module.exports = {
 
 	getHubsRooms: async function( query, options )
 	{
-		console.log( `(${getTimeStamp()}): Get Hubs Occupancy.` );
+		// console.log( `(${getTimeStamp()}): Get Hubs Occupancy.` );
 
 		const client = new MongoClient( dburl, mongoClientOptions );
 
@@ -234,12 +234,12 @@ module.exports = {
 		try
 		{
 			await client.connect();
-			console.log( `Successfully connected to MongoDB.` );
+			// console.log( `Successfully connected to MongoDB.` );
 
 
 			// Retrieve the collection from the database.
 			let collection = client.db( hubsDbName ).collection( hubsOccCollection );
-			console.log( `Succesfully retrieved ${hubsDbName} ${hubsOccCollection} collection.` );
+			// console.log( `Succesfully retrieved ${hubsDbName} ${hubsOccCollection} collection.` );
 
 
 			// Query all documents in collection matching query+options.
