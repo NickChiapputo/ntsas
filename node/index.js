@@ -311,7 +311,6 @@ client.on("message", async function(message)
 		let response = `Now checking channel ${args[ 1 ]} for room '${name}' with threshold ${threshold}. Preview image set to: ${imageURL}.\n\nCurrent channel list:\n`
 		for( let i = 0; i < channelIDs.length; i++ )
 			response += `<#${channelIDs[ i ]}>\n`;
-		console.log( response );
 		message.channel.send( response + `\n\n${JSON.stringify( result, null, 2 )}` );
 
 		return;
