@@ -31,7 +31,7 @@ var serverAction = async function ( req, res )
 {
 	// Display date and action for debugging
 	var date = new Date().toISOString().substr( 11, 8 );
-	console.log( " \n \n(" + date  + "): Redirect Query." );
+	// console.log( " \n \n(" + date  + "): Redirect Query." );
 
 
 	// Get the path information.
@@ -39,7 +39,7 @@ var serverAction = async function ( req, res )
 	let pathname = url_parts.pathname;
 
 
-	console.log( `Pathname: ${pathname}` );
+	// console.log( `Pathname: ${pathname}` );
 	// If we receive the join link, auto-route.
 	if( pathname === "/join/" )
 	{
@@ -65,7 +65,7 @@ var serverAction = async function ( req, res )
 			}
 		}
 
-		console.log( `Redirecting to https://hubs.mozilla.com/${redir_url}/` );
+		// console.log( `Redirecting to https://hubs.mozilla.com/${redir_url}/` );
 
 
 		// Redirect to the Hubs room.
