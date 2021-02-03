@@ -51,7 +51,7 @@ client.on("message", async function(message)
 			let url = messageParts[ 0 ] + ':' + messageParts[ 1 ];
 			url = url.substring( 0, url.length - 1 );
 			let numUsers = messageParts[ 2 ].split( ',' ).length;
-			console.log( ` \nHubs Room URL: ${url}\nNumber of Users: ${numUsers}` );
+			// console.log( ` \nHubs Room URL: ${url}\nNumber of Users: ${numUsers}` );
 		
 
 			// Delete last request message and current user update
@@ -76,7 +76,7 @@ client.on("message", async function(message)
 			// There are no users in the current room.
 
 			let url = message.content.substring( 23, message.content.length - 2 );
-			console.log( ` \nHubs Room URL: ${url}\nNumber of Users: 0` );
+			// console.log( ` \nHubs Room URL: ${url}\nNumber of Users: 0` );
 
 
 			// Delete last request message and current user update
@@ -363,10 +363,11 @@ client.on("message", async function(message)
 	{
 		console.log( "Received list request." );
 
-		let response = `Currently watching channels:\n`;
-		for( let i = 0; i < channelIDs.length; i++ )
+		let response = `Currently watching rooms:\n`;
+		let occupancyResults = await mongoLib.getHubsOccupancy();
+		for( let i = 0; i < occupancyResults.length; i++ )
 		{
-			response += `<#${channelIDs[ i ]}>\n`;
+			response += `<#${occupancyResults[ i ].channelID}> - ${occupancyResults[ i ].url}\n`;
 		}
 		console.log( response );
 		message.channel.send( response );
@@ -381,7 +382,7 @@ client.on("message", async function(message)
 		let response = `Current Occupancy Levels:\n`;
 		for( let i = 0; i < occupancyResults.length; i++ )
 		{
-			response += `**${occupancyResults[ i ].name}**: ${occupancyResults[ i ].users}\n`;
+			response += `**${occupancyResults[ i ].name}** (<#${occupancyResults[ i ].channelID}>): ${occupancyResults[ i ].users}\n`;
 		}
 
 		console.log( response );
@@ -521,8 +522,8 @@ client.on("message", async function(message)
 		let helpMessage = 
 			"North Tech-SAS Hubs Bot Commands:\n\n" +
 			">>> " +
-			"**`!ntsas link <channel> <room_name>`**\n" + 
-					"Add a new Hubs-connected channel to the checking list and name the room. Provide an attachment .png image to the message to specify a preview image for the website.\n\n" +
+			"**`!ntsas link <channel> <threshold> <room_name>`**\n" + 
+					"Add a new Hubs-connected channel to the checking list with an integer user threshold count and name the room. Provide an attachment .png image to the message to specify a preview image for the website.\n\n" +
 			"**`!ntsas unlink <channel>`**\n" + 
 					"Remove a Hubs-connected channel from the checking list.\n\n" +
 			"**`!ntsas update <channel> <field-to-update> <new-value>`**\n" + 
