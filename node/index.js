@@ -25,11 +25,9 @@ const client = new Discord.Client();		// Create a discord client.
 const channelIDs = [];
 const prefix = '!';				// Prefix text to identify commands.
 const hubsBotID = '509129921826914304';		// ID for the Hubs bot to identify messages from it.
-const deleteMessage = 0;			// Flag to delete last message sent and Hubs Bot response.
 
 let messageChannels = [];			// Create object to hold list of references to channels to message in.
 let intervalHandle = undefined;			// Create object to hold interval handle.
-let lastMessage = undefined;			// Hold reference to last message to clean it up after response.
 
 
 // Discord bot message handler.
@@ -48,16 +46,6 @@ client.on("message", async function(message)
 			url = url.substring( 25, 32 );
 			let numUsers = messageParts[ 2 ].split( ',' ).length;
 			// console.log( ` \nHubs Room URL: ${url}\nNumber of Users: ${numUsers}` );
-		
-
-			// Delete last request message and current user update
-			// only if the response was from the last request message.
-			if( lastMessage !== undefined && deleteMessage )
-			{
-				lastMessage.delete();
-				lastMessage = undefined;
-				message.delete( { timeout: 0 } );
-			}
 
 
 			// Update the JSON object with the updated user count.
@@ -73,16 +61,6 @@ client.on("message", async function(message)
 
 			let url = message.content.substring( 48, 55 );
 			// console.log( ` \nHubs Room URL: ${url}\nNumber of Users: 0` );
-
-
-			// Delete last request message and current user update
-			// only if the response was from the last request message.
-			if( lastMessage !== undefined && deleteMessage )
-			{
-				lastMessage.delete();
-				lastMessage = undefined;
-				message.delete( { timeout: 0 } );
-			}
 
 
 			// Update the JSON object with the updated user count.
@@ -363,19 +341,6 @@ client.on("message", async function(message)
 
 		console.log( "Link request invalid." );
 	}
-	else if( args[ 0 ] === "list" )
-	{
-		console.log( "Received list request." );
-
-		let response = `Currently watching rooms:\n`;
-		let occupancyResults = await mongoLib.getHubsOccupancy();
-		for( let i = 0; i < occupancyResults.length; i++ )
-		{
-			response += `<#${occupancyResults[ i ].channelID}> - https://hubs.mozilla.com/${occupancyResults[ i ].url}/\n`;
-		}
-		console.log( response );
-		message.channel.send( response );
-	}
 	else if( args[ 0 ] === "status" )
 	{
 		console.log( "Received status request." );
@@ -546,8 +511,6 @@ client.on("message", async function(message)
 					"Remove a Hubs-connected channel from the checking list.\n\n" +
 			"**`!ntsas update <channel> <field-to-update> <new-value>`**\n" + 
 					"Updated a Hubs room information. Valid values for <field-to-update> are `name`, `image`, and `threshold`. If `image`, provide an attachment and <new-value> can be blank.\n\n" +
-			"**`!ntsas list`**\n" + 
-					"List the channels currently being watched.\n\n" +
 			"**`!ntsas status`**\n" + 
 					"Check the occupancy status of the rooms currently being watched.\n\n" +
 			"**`!ntsas start <frequency>`**\n" + 
@@ -615,16 +578,13 @@ client.on( "ready", async () => {
 
 	// TEST
 	let linkCommand = 	"**`!ntsas link <channel> <threshold> <room_name>`**";
-	let linkHelp = 		"Add a new Hubs-connected channel to the checking list. Provide an attachment .png image to the message to specify a preview image for the website.";
+	let linkHelp = 		"Add a new Hubs-connected channel to the checking list. Provide an attachment .png image to specify a preview image for the website.";
 	
 	let unlinkCommand = "**`!ntsas unlink <channel>`**";
 	let unlinkHelp = 	"Remove a Hubs-connected channel from the checking list.";
 	
 	let updateCommand = "**`!ntsas update <channel> <field-to-update> <new-value>`**";
 	let updateHelp = 	"Update a room's information. <field-to-update> can be `name`, `image`, and `threshold`. If `image`, provide an attachment and <new-value> can be blank.";
-	
-	let listCommand = 	"**`!ntsas list`**";
-	let listHelp = 		"List the channels currently being watched.";
 	
 	let statusCommand = "**`!ntsas status`**";
 	let statusHelp = 	"Check the occupancy status of the rooms currently being watched.";
@@ -642,7 +602,7 @@ client.on( "ready", async () => {
 	let pingHelp = 		"Ping the bot and see the latency.";
 
 	let testChannel = client.channels.cache.get( "803030839171874816" );
-	let inline = false;
+	let inline = true;
 	let postMessage = '\n‎';	// There is a blank character after the \n that can be copied.
 	const embed = new Discord.MessageEmbed()
 						.setColor( '#00853E' )
@@ -655,17 +615,12 @@ client.on( "ready", async () => {
 							{ name: 'Linking Rooms', 	value: `${linkCommand}\n${linkHelp}${postMessage}`, 	inline: inline },
 							{ name: 'Unlinking Rooms', 	value: `${unlinkCommand}\n${unlinkHelp}${postMessage}`, inline: inline },
 							{ name: 'Updating Room', 	value: `${updateCommand}\n${updateHelp}${postMessage}`, inline: inline },
-							{ name: 'List Channels', 	value: `${listCommand}\n${listHelp}${postMessage}`, 	inline: inline },
 							{ name: 'Check Status', 	value: `${statusCommand}\n${statusHelp}${postMessage}`, inline: inline },
 							{ name: 'Start Checking', 	value: `${startCommand}\n${startHelp}${postMessage}`, 	inline: inline },
 							{ name: 'Stop Checking', 	value: `${stopCommand}\n${stopHelp}${postMessage}`, 	inline: inline },
 							{ name: 'Delete Messages', 	value: `${deleteCommand}\n${deleteHelp}${postMessage}`, inline: inline },
 							{ name: 'Pinging Bot', 		value: `${pingCommand}\n${pingHelp}${postMessage}`, 	inline: inline },
-							// { name: 'Check the Website', value: '[country codes](https://countrycode.org/)'}
-							// { name: 'Inline field title', value: 'Some value here', inline: true },
-							// { name: 'Inline field title', value: 'Some value here', inline: true },
 						)
-						// .setFooter( '[website](https://ieeeunt.tk/ntsas21_hubs/)[country codes](https://countrycode.org/)' )
 						.setTimestamp();
 
     // Send the embed to the same channel as the message
