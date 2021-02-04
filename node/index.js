@@ -22,10 +22,6 @@ const Discord = require( "discord.js" );	// Discord API.
 const config = require( "./config.json" );	// Bot configuration.
 const client = new Discord.Client();		// Create a discord client.
 
-const intervalTime = 5000;			// Time in ms to query hubs bot.
-// const channelIDs = ['800490422089809951',	// List of IDs for channel to communicate in.
-// 			'800535144900722748',
-// 			'800538568384184320' ];
 const channelIDs = [];
 const prefix = '!';				// Prefix text to identify commands.
 const hubsBotID = '509129921826914304';		// ID for the Hubs bot to identify messages from it.
@@ -385,14 +381,26 @@ client.on("message", async function(message)
 		console.log( "Received status request." );
 
 		let occupancyResults = await mongoLib.getHubsOccupancy();
-		console.log( `Occupancy Results:\n${occupancyResults}` );
+		console.log( `Occupancy Results:\n${JSON.stringify( occupancyResults, null, 2 )}` );
+		console.log( `${occupancyResults[ 0 ].name}` );
 
-		let response = `Current Occupancy Levels:\n`;
+		const postMessage = '\n‎';	// There is a blank character after the \n that can be copied.
+		const response = new Discord.MessageEmbed()
+							.setColor( '#00853E' )
+							.setThumbnail( 'https://ieeeunt.tk/IEEEUNT.png' )
+							.setTitle( `Current Occupancy Levels` );
 		for( let i = 0; i < occupancyResults.length; i++ )
 		{
-			response += `**${occupancyResults[ i ].name}** (<#${occupancyResults[ i ].channelID}>): ${occupancyResults[ i ].users}\n`;
+			let room = occupancyResults[ i ];
+			let name = occupancyResults[ i ].name;
+			let value = `${occupancyResults[ i ].users} / ${occupancyResults[ i ].threshold} Users\n` +
+							`Channel: <#${occupancyResults[ i ].channelID}>\n` +
+							`[Join Room](https://hubs.mozilla.com/${occupancyResults[ i ].url}/)`;
+			response.addFields( { name: name, value: value + postMessage } );
+			// response += `**${occupancyResults[ i ].name}** (<#${occupancyResults[ i ].channelID}>): ${occupancyResults[ i ].users}\n`;
 		}
 
+		response.setTimestamp();
 		console.log( response );
 		message.channel.send( response );
 	}
@@ -601,7 +609,67 @@ client.on( "ready", async () => {
 		channelIDs.push( channelSearchResult[ i ].channelID );
 		messageChannels[ i ] = client.channels.cache.get( channelIDs[ i ] );
 		// messageChannels[ i ].send( "Ready!" );
-	}	
+	}
+
+
+
+	// TEST
+	let linkCommand = 	"**`!ntsas link <channel> <threshold> <room_name>`**";
+	let linkHelp = 		"Add a new Hubs-connected channel to the checking list. Provide an attachment .png image to the message to specify a preview image for the website.";
+	
+	let unlinkCommand = "**`!ntsas unlink <channel>`**";
+	let unlinkHelp = 	"Remove a Hubs-connected channel from the checking list.";
+	
+	let updateCommand = "**`!ntsas update <channel> <field-to-update> <new-value>`**";
+	let updateHelp = 	"Update a room's information. <field-to-update> can be `name`, `image`, and `threshold`. If `image`, provide an attachment and <new-value> can be blank.";
+	
+	let listCommand = 	"**`!ntsas list`**";
+	let listHelp = 		"List the channels currently being watched.";
+	
+	let statusCommand = "**`!ntsas status`**";
+	let statusHelp = 	"Check the occupancy status of the rooms currently being watched.";
+	
+	let startCommand = 	"**`!ntsas start <frequency>`**";
+	let startHelp = 	"Start Hubs user checking every `frequency` seconds. Frequency is optional, default value is 5.";
+	
+	let stopCommand = 	"**`!ntsas stop`**";
+	let stopHelp = 		"Stop the Hubs user checking.";
+	
+	let deleteCommand = "**`!ntsas delete <num>`**";
+	let deleteHelp = 	"Delete `num` of the last message including the command message.";
+	
+	let pingCommand = 	"**`!ntsas ping`**";
+	let pingHelp = 		"Ping the bot and see the latency.";
+
+	let testChannel = client.channels.cache.get( "803030839171874816" );
+	let inline = false;
+	let postMessage = '\n‎';	// There is a blank character after the \n that can be copied.
+	const embed = new Discord.MessageEmbed()
+						.setColor( '#00853E' )
+						.setTitle( 'North Tech-SAS Bot Usage' )
+						// .setURL( 'https://discord.js.org/' )
+						// .setAuthor( 'Some name', 'https://i.imgur.com/wSTFkRM.png', 'https://discord.js.org' )
+						// .setDescription( 'Some description here' )
+						.setThumbnail( 'https://ieeeunt.tk/IEEEUNT.png' )
+						.addFields(
+							{ name: 'Linking Rooms', 	value: `${linkCommand}\n${linkHelp}${postMessage}`, 	inline: inline },
+							{ name: 'Unlinking Rooms', 	value: `${unlinkCommand}\n${unlinkHelp}${postMessage}`, inline: inline },
+							{ name: 'Updating Room', 	value: `${updateCommand}\n${updateHelp}${postMessage}`, inline: inline },
+							{ name: 'List Channels', 	value: `${listCommand}\n${listHelp}${postMessage}`, 	inline: inline },
+							{ name: 'Check Status', 	value: `${statusCommand}\n${statusHelp}${postMessage}`, inline: inline },
+							{ name: 'Start Checking', 	value: `${startCommand}\n${startHelp}${postMessage}`, 	inline: inline },
+							{ name: 'Stop Checking', 	value: `${stopCommand}\n${stopHelp}${postMessage}`, 	inline: inline },
+							{ name: 'Delete Messages', 	value: `${deleteCommand}\n${deleteHelp}${postMessage}`, inline: inline },
+							{ name: 'Pinging Bot', 		value: `${pingCommand}\n${pingHelp}${postMessage}`, 	inline: inline },
+							// { name: 'Check the Website', value: '[country codes](https://countrycode.org/)'}
+							// { name: 'Inline field title', value: 'Some value here', inline: true },
+							// { name: 'Inline field title', value: 'Some value here', inline: true },
+						)
+						// .setFooter( '[website](https://ieeeunt.tk/ntsas21_hubs/)[country codes](https://countrycode.org/)' )
+						.setTimestamp();
+
+    // Send the embed to the same channel as the message
+    // testChannel.send( embed );
 });
 
 
