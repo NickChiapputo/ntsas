@@ -3,9 +3,11 @@
 	--gold-shadow: rgba( 255, 215, 0, 0.4 );
 }
 
-body {
+html, body {
 	padding: 0;
 	margin: 0;
+	border: 0;
+	outline: 0;
 }
 
 h1 {
@@ -39,6 +41,49 @@ h1 {
 	/*max-height: 90vh;*/
 	/*overflow-y: auto;*/
 	/*overflow-x: hidden;*/
+
+	box-shadow: 0px -8px 8px 0 rgba(0, 0, 0, 0.4);
+}
+
+
+.banner {
+	width: 100%;
+	height: 50vw;
+	max-height: 30vh;
+
+	margin: 0;
+
+	/* Image is 1436 x 718 */
+	background-image: url( "/banner.png" );
+	background-size: cover;
+}
+
+.banner-logo {
+	/*width: 95%;*/
+	height: 95%;
+
+	margin: auto;
+
+	background-image: url( "/banner_logo.png" );
+	background-size: contain;
+}
+
+.banner, .banner-logo {
+	background-position: center center;
+	background-repeat: no-repeat;	
+
+	overflow-x: hidden;
+
+	padding: 0;
+
+	transition: all 0.2s ease-in-out;
+}
+
+.banner-logo:hover {
+	transform: scale( 1.1 );
+}
+
+.banner:hover {
 }
 
 
@@ -51,9 +96,9 @@ h1 {
 	/*width: 45%;
 	max-width: 42%;*/
 
-	height: 15vh;
+	/*height: 15vh;
 	min-height: 20vh;
-	max-height: 25vw;
+	max-height: 25vw;*/
 
 	/*margin: 2%;*/
 
@@ -196,8 +241,14 @@ h1 {
 .name {
 	display: block;
 
+	margin-top: 5px;
+
 	text-align: center;
-	text-shadow: 2px 2px 4px #000000;
+	/*text-shadow: 2px 2px 4px #000000;*/
+	text-shadow: 	0 0 8px #000000,
+					0 0 8px #000000,
+					0 0 8px #000000;
+
 }
 
 
@@ -222,30 +273,26 @@ h1 {
 
 
 	.users, .users-full {
-		margin-top: 226px;
+		margin-top: 210px;
 	}
 }
 
 @media (min-width: 801px) {
 	.container {
+		/*width: 800px;*/
 		width: 100%;
 	}
 
 	.item {
-		/*width: 360;
-		height: 180;*/
-		/*width: 168;
-		height: 84;*/
+		min-width: 360px;
+		max-width: 360px;
+		width: 360px;
 
-		/*min-width: 336;*/
-		max-width: 336;
-		width: 336;
+		min-height: 180px;
+		max-height: 180px;
+		height: 180px;
 
-		/*min-height: 168;*/
-		max-height: 168;
-		height: 168;
-
-		margin: 2%;
+		margin: 1%;
 	}
 
 	.sponsored-item {
