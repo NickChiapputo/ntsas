@@ -26,6 +26,9 @@ const channelIDs = [];
 const prefix = '!';				// Prefix text to identify commands.
 const hubsBotID = '509129921826914304';		// ID for the Hubs bot to identify messages from it.
 
+let userList = {};
+let updateMessage = undefined;
+
 let messageChannels = [];			// Create object to hold list of references to channels to message in.
 let intervalHandle = undefined;			// Create object to hold interval handle.
 
@@ -44,8 +47,16 @@ client.on("message", async function(message)
 			let messageParts = message.content.substring( 20 ).split( ':' );
 			let url = messageParts[ 0 ] + ':' + messageParts[ 1 ];
 			url = url.substring( 25, 32 );
-			let numUsers = messageParts[ 2 ].split( ',' ).length;
+			let users = messageParts[ 2 ].substring( 2, messageParts[ 2 ].length - 2 ).split( ',' );
+			let numUsers = users.length;
 			// console.log( ` \nHubs Room URL: ${url}\nNumber of Users: ${numUsers}` );
+
+
+			userList[ url ] = [];
+			for( let i = 0; i < numUsers; i++ )
+			{
+				userList[ url ].push( users[ i ].substring( 1, users[ i ].length ) );
+			}
 
 
 			// Update the JSON object with the updated user count.
@@ -60,6 +71,7 @@ client.on("message", async function(message)
 			// There are no users in the current room.
 
 			let url = message.content.substring( 48, 55 );
+			userList[ url ] = [];
 			// console.log( ` \nHubs Room URL: ${url}\nNumber of Users: 0` );
 
 
@@ -346,8 +358,8 @@ client.on("message", async function(message)
 		console.log( "Received status request." );
 
 		let occupancyResults = await mongoLib.getHubsOccupancy();
-		console.log( `Occupancy Results:\n${JSON.stringify( occupancyResults, null, 2 )}` );
-		console.log( `${occupancyResults[ 0 ].name}` );
+		// console.log( `Occupancy Results:\n${JSON.stringify( occupancyResults, null, 2 )}` );
+		// console.log( `${occupancyResults[ 0 ].name}` );
 
 		const postMessage = '\n‎';	// There is a blank character after the \n that can be copied.
 		const response = new Discord.MessageEmbed()
@@ -499,6 +511,76 @@ client.on("message", async function(message)
 		console.log( response );
 		message.channel.send( response );
 	}
+	else if( args[ 0 ] === "watch" )
+	{
+		console.log( `Received watch request in channel #${message.channel.name} (${message.channel.id}).` );
+
+		// Grab the stats for the rooms we are currently watching
+		// and test for successful return.
+		let occupancyResults = await mongoLib.getHubsOccupancy();
+
+
+		// Create a message embed object to make the output look pretty.
+		const response = new Discord.MessageEmbed()
+							.setColor( '#00853E' )
+							.setThumbnail( 'https://ieeeunt.tk/IEEEUNT.png' )
+							.setTitle( `Current Occupancy Levels` );
+
+		// Add this string after each field. There is a blank
+		// character after the \n that can be copied to the clipboard.
+		// This blank space is required for the newline to not be eaten.
+		const postMessage = '\n‎';
+
+
+		// Iterate through each room we are watching.
+		// Grab the room name (bold), list of users (indented with quote),
+		// bridged channel, and url (hyperlinked 'Join Room').
+		for( let i = 0; i < occupancyResults.length; i++ )
+		{
+			let room = occupancyResults[ i ];	// Room object.
+			let name = room.name;				// Room human-readable name.
+
+
+			// Verify that the room has been checked prior to 
+			// adding it to the embed. If it hasn't just skip it.
+			if( !userList[ room.url ] )
+			{
+				console.log( `Error with room: ${JSON.stringify( room, null, 2 )}` );
+				continue;
+			}
+
+
+			// Create indented (quoted) user list.
+			let users = '';
+			let numUsers = userList[ room.url ].length;
+			for( let j = 0; j < numUsers; j++ )
+			{
+				users += `> ${userList[ room.url ][ j ]}\n`;
+			}
+
+
+			// Set up the content.
+			let value = `${room.users} / ${room.threshold} Users\n` +
+							users +
+							`Channel: <#${room.channelID}>\n` +
+							`[Join Room](https://hubs.mozilla.com/${room.url}/)`;
+
+			// Add the current room field to the embed message.
+			response.addFields( { name: name, value: value + postMessage } );
+		}
+
+		// Add a timestamp to the bottom of the embed.
+		response.setTimestamp();
+
+		// Send the embed message to the channel the command was called from.
+		// After message is sent, save the message reference.
+		message.channel.send( response ).then( msg => updateMessage = msg );
+	}
+	else if( args[ 0 ] === "stop-watch" )
+	{
+		console.log( "Received stop watch request." );
+		updateMessage = undefined;
+	}
 	else
 	{
 		console.log( "Help message request." );
@@ -513,6 +595,10 @@ client.on("message", async function(message)
 					"Updated a Hubs room information. Valid values for <field-to-update> are `name`, `image`, and `threshold`. If `image`, provide an attachment and <new-value> can be blank.\n\n" +
 			"**`!ntsas status`**\n" + 
 					"Check the occupancy status of the rooms currently being watched.\n\n" +
+			"**`!ntsas watch`**\n" + 
+					"Create a message in the same channel that is updated every time channels are checked with room information.\n\n" +
+			"**`!ntsas stop-watch`**\n" + 
+					"Stop editing the status update message.\n\n" +
 			"**`!ntsas start <frequency>`**\n" + 
 					"Start Hubs user checking every `frequency` seconds. Frequency is optional, default value is 5.\n\n" +
 			"**`!ntsas stop`**\n" + 
@@ -629,11 +715,85 @@ client.on( "ready", async () => {
 
 
 // Function to run on an interval.
-function intervalFunc()
+async function intervalFunc()
 {
 	for( let i = 0; i < messageChannels.length; i++ )
 	{
 		messageChannels[ i ].send( '!hubs users' );
+	}
+
+
+	if( updateMessage )
+	{
+		// Get the embed object in the update message.
+		// We assume there is only one because it is defined that way 
+		// in the command function.
+		let embed = updateMessage.embeds[ 0 ];
+
+
+		// Grab the stats for the rooms we are currently watching.
+		let occupancyResults = await mongoLib.getHubsOccupancy();
+
+
+		// Array will store the newly updated fields.
+		let newEmbedFields = [];
+
+
+		// Add this string after each field. There is a blank
+		// character after the \n that can be copied to the clipboard.
+		// This blank space is required for the newline to not be eaten.
+		const postMessage = '\n‎';
+
+
+		// Iterate through each room we are watching.
+		// Grab the room name (bold), list of users (indented with quote),
+		// bridged channel, and url (hyperlinked 'Join Room').
+		for( let i = 0; i < occupancyResults.length; i++ )
+		{
+			let room = occupancyResults[ i ];	// Room object.
+			let name = room.name;				// Room human-readable name.
+
+
+			// Verify that the room has been checked prior to 
+			// adding it to the embed. If it hasn't just skip it.
+			if( !userList[ room.url ] )
+			{
+				continue;
+			}
+
+
+			// Create indented (quoted) user list.
+			let users = '';
+			let numUsers = userList[ room.url ].length;
+			for( let j = 0; j < numUsers; j++ )
+			{
+				users += `> ${userList[ room.url ][ j ]}\n`;
+			}
+
+
+			// Set up the content.
+			let value = `${room.users} / ${room.threshold} Users\n` +
+							users +
+							`Channel: <#${room.channelID}>\n` +
+							`[Join Room](https://hubs.mozilla.com/${room.url}/)`;
+
+			// Add the current room field to list of new embed fields.
+			newEmbedFields.push( { name: name, value: value + postMessage } );
+		}
+
+
+		// Remove all embed fields and replace with new ones.
+		// This is cheaper than checking each field, updating the existing ones,
+		// removing the old ones, and then adding the new ones.
+		embed.spliceFields( 0, embed.fields.length, newEmbedFields );
+
+
+		// Add a timestamp to the bottom of the embed.
+		embed.setTimestamp();
+
+
+		// Edit the message with the new embed object.
+		updateMessage.edit( embed );
 	}
 }
 
