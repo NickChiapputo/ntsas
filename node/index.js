@@ -29,6 +29,8 @@ const hubsBotID = '509129921826914304';		// ID for the Hubs bot to identify mess
 let userList = {};
 let updateMessage = undefined;
 
+let chatBridgeChannel = undefined;
+
 let messageChannels = [];			// Create object to hold list of references to channels to message in.
 let intervalHandle = undefined;			// Create object to hold interval handle.
 
@@ -87,7 +89,37 @@ client.on("message", async function(message)
 	}
 
 
-	if( !message.content.startsWith( prefix ) ) return;
+	if( !message.content.startsWith( prefix ) )
+	{
+		// Check if the user is a bot and if we are in
+		// a channel with a Hubs room we are watching.
+		console.log( `Bot: ${message.author.bot}\nChannel Include: ${messageChannels.includes( message.channel )}` )
+		if( message.author.bot && messageChannels.includes( message.channel ) )
+		{
+			console.log( "Received message from Hubs channel." );
+
+			if( chatBridgeChannel )
+			{
+				let srcRoom = ( await mongoLib.getHubsRooms( { url: message.channel.topic.substring( 25, 32 ) } ) )[ 0 ];
+
+
+				const postMessage = '\n‎';	// There is a blank character after the \n that can be copied.
+				const response = new Discord.MessageEmbed()
+									.setColor( '#00853E' )
+									.setThumbnail( 'https://ieeeunt.tk/IEEEUNT.png' )
+									.setTitle( `New Message` )
+									.addFields( { name: "User", value: message.author.username } )
+									.addFields( { name: "Room", value: srcRoom.name } )
+									.addFields( { name: "Message", value: message.content } )
+									.setTimestamp();
+									
+
+				chatBridgeChannel.send( response );
+			}
+		}
+
+		return;
+	}
 
 	const commandBody = message.content.slice( prefix.length );
 	const args = commandBody.split( ' ' );
@@ -580,6 +612,33 @@ client.on("message", async function(message)
 	{
 		console.log( "Received stop watch request." );
 		updateMessage = undefined;
+	}
+	else if( args[ 0 ] === "bridge-chat" )
+	{
+		console.log( "Received chat bridge request." );
+
+
+		// Verify the channel is in valid format.
+		if( !args[ 1 ] || !args[ 1 ].match( /<#[0-9]{18}>/ ) )
+		{
+			console.log( `Invalid channel.\n'${args[ 1 ]}'` );
+			message.channel.send( 'Please provide a valid channel.\n\nUsage:\n> **`!ntsas link <channel> <room_name> <threshold>`**' );
+			return;
+		}
+
+		
+		// Search for the channel link request and verify it is an existing channel.
+		let newChannelID = args[ 1 ].substring( 2, args[ 1 ].length - 1 );
+		chatBridgeChannel = undefined;
+		if( !(chatBridgeChannel = client.channels.cache.get( newChannelID ) ) )
+		{
+			console.log( `Unable to find channel. '${args[ 1 ]}'` );
+			message.channel.send( `Sorry! I was unable to find the channel ${args[ 1 ]}` );
+			return;
+		}
+
+
+		message.channel.send( `Bridging all Hubs chat to <#${newChannelID}>` );
 	}
 	else
 	{
