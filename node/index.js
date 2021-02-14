@@ -93,7 +93,6 @@ client.on("message", async function(message)
 	{
 		// Check if the user is a bot and if we are in
 		// a channel with a Hubs room we are watching.
-		console.log( `Bot: ${message.author.bot}\nChannel Include: ${messageChannels.includes( message.channel )}` )
 		if( message.author.bot && messageChannels.includes( message.channel ) )
 		{
 			console.log( "Received message from Hubs channel." );
@@ -112,7 +111,7 @@ client.on("message", async function(message)
 									.addFields( { name: "Room", value: srcRoom.name } )
 									.addFields( { name: "Message", value: message.content } )
 									.setTimestamp();
-									
+
 
 				chatBridgeChannel.send( response );
 			}
@@ -122,7 +121,7 @@ client.on("message", async function(message)
 	}
 
 	const commandBody = message.content.slice( prefix.length );
-	const args = commandBody.split( ' ' );
+	const args = commandBody.split( /[\s,]+/ );			// Split on spaces and trim any whitespace from each argument.
 	const command = args.shift().toLowerCase();
 
 	
@@ -198,7 +197,7 @@ client.on("message", async function(message)
 		if( !args[ 1 ] || !args[ 1 ].match( /<#[0-9]{18}>/ ) )
 		{
 			console.log( `Invalid channel.\n'${args[ 1 ]}'` );
-			message.channel.send( 'Please provide a valid channel.\n\nUsage:\n> **`!ntsas link <channel> <room_name> <threshold>`**' );
+			message.channel.send( 'Please provide a valid channel.\n\nUsage:\n> **`!ntsas link <channel> <threshold> <room_name>`**' );
 			return;
 		}
 
@@ -207,7 +206,7 @@ client.on("message", async function(message)
 		if( !args[ 2 ] || !args[ 2 ].match( /[0-9]+/ ) )
 		{
 			console.log( `Invalid threshold.\n'${args[ 2 ]}'` );
-			message.channel.send( 'Please provide a valid threshold.\n\nUsage:\n> **`!ntsas link <channel> <room_name> <threshold>`**' )
+			message.channel.send( 'Please provide a valid threshold.\n\nUsage:\n> **`!ntsas link <channel> <threshold> <room_name>`**' )
 			return;
 		}
 
@@ -216,7 +215,7 @@ client.on("message", async function(message)
 		if( !args[ 3 ] )
 		{
 			console.log( `Invalid room name.\n'${args[ 3 ]}'` );
-			message.channel.send( 'Please provide a room name.\n\nUsage:\n> **`!ntsas link <channel> <room_name> <threshold>`**' );
+			message.channel.send( 'Please provide a room name.\n\nUsage:\n> **`!ntsas link <channel> <threshold> <room_name>`**' );
 			return;
 		}
 
@@ -639,6 +638,83 @@ client.on("message", async function(message)
 
 
 		message.channel.send( `Bridging all Hubs chat to <#${newChannelID}>` );
+	}
+	else if( args[ 0 ] === "send" )
+	{
+		console.log( "Received send message command." );
+
+
+		// Verify that the second argument is either a channel or 'all'.
+		if( !args[ 1 ] || ( !args[ 1 ].match( /<#[0-9]{18}>/ ) && args[ 1 ] !== 'all' ) )
+		{
+			console.log( `Invalid send location.\n'${args[ 1 ]}'` );
+			message.channel.send( 'Please provide a valid channel or use the `all` command.\n\nUsage:\n> **`!ntsas send <channel>|all <message>`**' );
+			return;
+		}
+
+		
+		// Search for the channel link request and verify it is an existing channel.
+		let newChannelID = args[ 1 ].substring( 2, args[ 1 ].length - 1 );
+		let newTextChannel = undefined;
+		if( args[ 1 ] !== 'all' && !(newTextChannel = client.channels.cache.get( newChannelID ) ) )
+		{
+			console.log( `Unable to find channel. '${args[ 1 ]}'` );
+			message.channel.send( `Sorry! I was unable to find the channel ${args[ 1 ]}` );
+			return;
+		}
+
+
+		// Verify that we have something for the message
+		if( !args[ 2 ] )
+		{
+			console.log( `No message given.` );
+			message.channel.send( 'Please provide a message.\n\nUsage:\n> **`!ntsas send <channel>|all <message>`**' );
+			return;
+		}
+
+
+		// Gather the message contents.
+		let msg = ``;
+		for( let i = 2; i < args.length - 1; i++ )
+			msg += args[ i ] + ' ';
+		msg += args[ args.length - 1 ];
+
+
+		// If we're sending to all channels, iterate through each one and send the message.
+		// Otherwise, if we're sending to a specific channel, send it.
+		let rooms = '';
+		if( args[ 1 ] === 'all' )
+		{
+			let occupancyResults = await mongoLib.getHubsRooms( { watching: 1 } );
+			console.log( `Results Length: ${occupancyResults.length}` );
+			for( let i = 0; i < messageChannels.length; i++ )
+			{
+				rooms += `${occupancyResults[ i ].name}\n`
+				messageChannels[ i ].send( `${message.author.username}:\n${msg}` );
+			}
+		}
+		else
+		{
+			rooms += ( await mongoLib.getHubsRooms( { url: newTextChannel.topic.substring( 25, 32 ) } ) )[ 0 ].name;
+			newTextChannel.send( `${message.author.username}:\n${msg}` );
+		}
+
+
+		// Create message embed as a response.
+		// Create a message embed object to make the output look pretty.
+		const postMessage = '\n‎';	// There is a blank character after the \n that can be copied.
+		const response = new Discord.MessageEmbed()
+							.setColor( '#00853E' )
+							.setThumbnail( 'https://ieeeunt.tk/IEEEUNT.png' )
+							.setTitle( `New Message` )
+							.addFields( { name: "User", value: message.author.username } )
+							.addFields( { name: "Room(s)", value: rooms } )
+							.addFields( { name: "Message", value: msg } )
+							.setTimestamp();
+
+
+		// Send the embed message to the channel the command was called from.
+		message.channel.send( response );
 	}
 	else
 	{
