@@ -105,7 +105,7 @@ client.on("message", async function(message)
 				const postMessage = '\n‎';	// There is a blank character after the \n that can be copied.
 				const response = new Discord.MessageEmbed()
 									.setColor( '#00853E' )
-									.setThumbnail( 'https://ieeeunt.tk/IEEEUNT.png' )
+									.setThumbnail( 'https://ieeeunt.org/IEEEUNT.png' )
 									.setTitle( `New Message` )
 									.addFields( { name: "User", value: message.author.username } )
 									.addFields( { name: "Room", value: srcRoom.name } )
@@ -278,7 +278,7 @@ client.on("message", async function(message)
 
 		// Check if we have received an image attachment.
 		let attachment = message.attachments.first();
-		let imageURL = `https://ieeeunt.tk/ntsas21_hubs/media/default.png`;
+		let imageURL = `https://ieeeunt.org/ntsas21_hubs/media/default.png`;
 		if( attachment )
 		{
 			// Verify that we're receiving a png file to make sure it's an image.
@@ -299,7 +299,7 @@ client.on("message", async function(message)
 			// TODO check if file exists. If so, change name.
 
 
-			imageURL = `https://ieeeunt.tk/ntsas21_hubs/media/${attachment.name}`;
+			imageURL = `https://ieeeunt.org/ntsas21_hubs/media/${attachment.name}`;
 
 			const file = fs.createWriteStream( `../html/ntsas21_hubs/media/${attachment.name}` );
 			file.on( 'finish', () => { file.close(); } );
@@ -395,7 +395,7 @@ client.on("message", async function(message)
 		const postMessage = '\n‎';	// There is a blank character after the \n that can be copied.
 		const response = new Discord.MessageEmbed()
 							.setColor( '#00853E' )
-							.setThumbnail( 'https://ieeeunt.tk/IEEEUNT.png' )
+							.setThumbnail( 'https://ieeeunt.org/IEEEUNT.png' )
 							.setTitle( `Current Occupancy Levels` );
 		for( let i = 0; i < occupancyResults.length; i++ )
 		{
@@ -518,7 +518,7 @@ client.on("message", async function(message)
 			// TODO check if file exists. If so, change name.
 
 
-			update.image = `https://ieeeunt.tk/ntsas21_hubs/media/${attachment.name}`;
+			update.image = `https://ieeeunt.org/ntsas21_hubs/media/${attachment.name}`;
 
 			const file = fs.createWriteStream( `../html/ntsas21_hubs/media/${attachment.name}` );
 			file.on( 'finish', () => { file.close(); } );
@@ -554,7 +554,7 @@ client.on("message", async function(message)
 		// Create a message embed object to make the output look pretty.
 		const response = new Discord.MessageEmbed()
 							.setColor( '#00853E' )
-							.setThumbnail( 'https://ieeeunt.tk/IEEEUNT.png' )
+							.setThumbnail( 'https://ieeeunt.org/IEEEUNT.png' )
 							.setTitle( `Current Occupancy Levels` );
 
 		// Add this string after each field. There is a blank
@@ -705,7 +705,7 @@ client.on("message", async function(message)
 		const postMessage = '\n‎';	// There is a blank character after the \n that can be copied.
 		const response = new Discord.MessageEmbed()
 							.setColor( '#00853E' )
-							.setThumbnail( 'https://ieeeunt.tk/IEEEUNT.png' )
+							.setThumbnail( 'https://ieeeunt.org/IEEEUNT.png' )
 							.setTitle( `New Message` )
 							.addFields( { name: "User", value: message.author.username } )
 							.addFields( { name: "Room(s)", value: rooms } )
@@ -831,7 +831,7 @@ client.on( "ready", async () => {
 						// .setURL( 'https://discord.js.org/' )
 						// .setAuthor( 'Some name', 'https://i.imgur.com/wSTFkRM.png', 'https://discord.js.org' )
 						// .setDescription( 'Some description here' )
-						.setThumbnail( 'https://ieeeunt.tk/IEEEUNT.png' )
+						.setThumbnail( 'https://ieeeunt.org/IEEEUNT.png' )
 						.addFields(
 							{ name: 'Linking Rooms', 	value: `${linkCommand}\n${linkHelp}${postMessage}`, 	inline: inline },
 							{ name: 'Unlinking Rooms', 	value: `${unlinkCommand}\n${unlinkHelp}${postMessage}`, inline: inline },
