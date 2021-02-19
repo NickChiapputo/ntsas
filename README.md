@@ -8,6 +8,8 @@
 		* https://docs.nginx.com/nginx/admin-guide/web-server/reverse-proxy/
 * Install nodejs
 	* Write request script
+	* Ensure node is updated with nvm to latest version so that discord.js works properly.
+		* https://github.com/nvm-sh/nvm
 	* References:
 		* https://www.digitalocean.com/community/tutorials/how-to-install-node-js-on-ubuntu-20-04
 * Install pm2
