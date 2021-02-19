@@ -60,6 +60,7 @@
 ### Requirements for Front-End Requests
 * To use xmlHttp requests from front end js, you need to set up Nginx for HTTPS proxy.
 * Make sure a domain name and an A DNS record is set up for the server.
+* Use the default ngixn server blocks with the server name changed only first. Use certbot to create the SSL certs. Then modify with the server blocks from the repository.
 * Follow the Digital Ocean guide to install certbot and create an SSL certificate for the domain with LetsEncrypt
 	* Can use certbot to automatically update the Nginx configuration for port 443 (HTTPS) redirection.
 	* Also make sure to set your DNS provider (e.g., CloudFlare) to full SSL/TLS encryption. Called "Full (Strict)" on CloudFlare. Otherwise redirections will infinitely loop.
