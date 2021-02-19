@@ -1,5 +1,5 @@
 server {
-        root /var/www/ieeeunt.tk/html;
+        root /var/www/ieeeunt.org/html;
         index index.html index.htm index.nginx-debian.html;
 
         server_name ieeeunt.org www.ieeeunt.org;
@@ -50,8 +50,8 @@ server {
 	#listen [::]:443 ssl ipv6only=on; # managed by Certbot
 	listen [::]:443 ssl;
 	listen 443 ssl; # managed by Certbot
-	ssl_certificate /etc/letsencrypt/live/ieeeunt.tk/fullchain.pem; # managed by Certbot
-	ssl_certificate_key /etc/letsencrypt/live/ieeeunt.tk/privkey.pem; # managed by Certbot
+	ssl_certificate /etc/letsencrypt/live/ieeeunt.org/fullchain.pem; # managed by Certbot
+	ssl_certificate_key /etc/letsencrypt/live/ieeeunt.org/privkey.pem; # managed by Certbot
 	include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
 	ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
 
@@ -72,4 +72,3 @@ server {
 
 
 }
-
