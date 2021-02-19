@@ -13,7 +13,7 @@ server {
 
 	# Add reverse proxy for access to $uri/hubs_redirect/
 	# to run on port 3000.
-	set $upstream localhost:3000;
+	set $upstream 127.0.0.1:3000;
 	location /ntsas21_hubs/get_data/ {
 		proxy_pass_header Authorization;
 		proxy_pass http://$upstream;
@@ -31,7 +31,7 @@ server {
 
 	# Add reverse proxy for access to $uri/hubs_redirect/
 	# to run on port 3000.
-	set $upstream localhost:3000;
+	set $upstream 127.0.0.1:3000;
 	location /join/ {
 		proxy_pass_header Authorization;
 		proxy_pass http://$upstream;

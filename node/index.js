@@ -6,7 +6,7 @@ const mongoLib = require( './db/' );
 
 
 // Reuirements for redirect server.
-const hostname = 'localhost';
+const hostname = '127.0.0.1';
 const port = 3000;
 
 const serverLib = require( './server/' );
