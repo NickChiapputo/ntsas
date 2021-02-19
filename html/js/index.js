@@ -62,7 +62,7 @@ var intervalFunc = function()
 				users = room.users;
 				threshold = room.threshold;
 				roomIDlist[ i ] = room.url;
-				imageURL = room.image ? room.image : "https://ieeeunt.tk/ntsas21_hubs/media/default.png";
+				imageURL = room.image ? room.image : "https://ieeeunt.org/ntsas21_hubs/media/default.png";
 
 
 				// Check if there is a current flex-box item
@@ -146,7 +146,7 @@ var intervalFunc = function()
 	};
 
 	// Send a GET request to 64.225.29.130/inventory/view
-	xmlHttp.open( "GET", "https://ieeeunt.tk/ntsas21_hubs/get_data", true );
+	xmlHttp.open( "GET", "https://ieeeunt.org/ntsas21_hubs/get_data", true );
 	xmlHttp.send();
 }
 
