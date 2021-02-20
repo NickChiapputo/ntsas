@@ -89,6 +89,7 @@ client.on("message", async function(message)
 	}
 
 
+	// Check if the new message is not a command.
 	if( !message.content.startsWith( prefix ) )
 	{
 		// Check if the user is a bot and if we are in
@@ -97,19 +98,32 @@ client.on("message", async function(message)
 		{
 			console.log( "Received message from Hubs channel." );
 
+			// Get the source room of the message.
+			let srcRoom = ( await mongoLib.getHubsRooms( { url: message.channel.topic.substring( 25, 32 ) } ) )[ 0 ];
+
+			// Get the author's mame.
+			let author = message.author.username;
+
+			// Get the message content.
+			let content = message.content;
+
+
+			// Bridge the chat to the restream.io channel.
+			let channelID = '806314143371886598';
+			client.channels.cache.get( channelID ).send( `[${srcRoom.name}: ${author}] ${content}` );;
+
+			// If we are bridging chat, send the message in an embed
+			// to the bridge chat channel.
 			if( chatBridgeChannel )
 			{
-				let srcRoom = ( await mongoLib.getHubsRooms( { url: message.channel.topic.substring( 25, 32 ) } ) )[ 0 ];
-
-
 				const postMessage = '\n‎';	// There is a blank character after the \n that can be copied.
 				const response = new Discord.MessageEmbed()
 									.setColor( '#00853E' )
 									.setThumbnail( 'https://ieeeunt.org/IEEEUNT.png' )
 									.setTitle( `New Message` )
-									.addFields( { name: "User", value: message.author.username } )
+									.addFields( { name: "User", value: author } )
 									.addFields( { name: "Room", value: srcRoom.name } )
-									.addFields( { name: "Message", value: message.content } )
+									.addFields( { name: "Message", value: content } )
 									.setTimestamp();
 
 
@@ -941,4 +955,67 @@ server.listen( port, hostname, () => {
 	var date = new Date().toISOString().substr( 11, 8 );
 	console.log( " \n \n \n(" + date  + "): Hubs/Discord Test.\n" );
 });
+
+
+// HubsBot Test Code
+/*const {HubsBot} = require( "hubs-client-bot" );
+//async function runBot()
+//{
+	//let bot = new HubsBot();
+	//let url = "https://hubs.mozilla.com/4N9fzUQ/";
+	//await bot.enterRoom( url, { name: "My First Bot" } );
+	//await bot.say( "Hello, World!" );
+//}
+
+runBot();*/
+
+
+/* 
+const puppeteer = require( 'puppeteer' );
+(async () => {
+	const browser = await puppeteer.launch({
+		args: [       '--no-sandbox',
+      			'--disable-setuid-sandbox',
+      			'--disable-dev-shm-usage',
+      			'--disable-accelerated-2d-canvas',
+      			'--no-first-run',
+      			'--no-zygote',
+      			'--single-process', // <- this one doesn't works in Windows
+      			'--disable-gpu'
+		]
+	});
+
+	console.log( "Browser Launched." );
+	const page = await browser.newPage();
+	console.log( "Page Created." );
+
+	let url = 'https://hubs.mozilla.com/4N9fzUQ/';
+	//let url = 'https://www.google.com/';
+	//let url = 'https://www.npmjs.com/package/puppeteer';
+	await page.goto( `${url}`, { waitUntil: 'domcontentloaded' } );
+	console.log( "Page Loaded." );
+
+	// Wait until the room loads.
+	let el;
+	while( ( el = await page.$('.RoomLayout__room-layout__32kGK' ) ) === null );
+	console.log( 'Room Loaded.' );
+
+	// Click on the 'People' logo
+	while( ( el = await page.$( '.ContentMenu__content-menu-button__1QkGw' ) ) === null );
+	el.click();
+	console.log( 'People Logo Clicked.' );
+
+	// Check the first user in the people list.
+	while( ( el = await page.$( '.List__list-item__3WrR0' ) ) === null );
+	while( ( el = await ( await el.$( 'button' ) ).$( 'p' ) ) === null );
+	el = await page.$$( '.List__list-item__3WrR0' );
+	console.log( `Number of People: ${el.length}` );
+
+	setInterval( async () => { console.log( `Number of People: ${( await page.$$( '.List__list-item__3WrR0' ) ).length }` ); }, 5000 );
+	setTimeout( async () => { await browser.close; console.log( "Browser Closed." ); }, 5000 );
+
+	//await browser.close();
+	//console.log( "Browser Closed." );
+})();
+*/
 
