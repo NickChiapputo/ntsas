@@ -43,9 +43,10 @@ var serverAction = async function ( req, res )
 	// If we receive the join link, auto-route.
 	if( pathname === "/join/" )
 	{
-		// Get all the hubs rooms.
+		// Get all the hubs rooms we are currently watching that are main halls.
 		let query = {
-			watching: 1
+			watching: 1,
+			type: 'main'
 		};
 		let options = {};
 		let occupancyData = await dbLib.getHubsRooms( query, options );
