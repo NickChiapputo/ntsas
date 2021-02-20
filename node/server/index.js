@@ -31,7 +31,7 @@ var serverAction = async function ( req, res )
 {
 	// Display date and action for debugging
 	var date = new Date().toISOString().substr( 11, 8 );
-	// console.log( " \n \n(" + date  + "): Redirect Query." );
+	// console.log( " \n \n(" + date  + "): Server Action." );
 
 
 	// Get the path information.
@@ -66,11 +66,12 @@ var serverAction = async function ( req, res )
 		}
 
 		// console.log( `Redirecting to https://hubs.mozilla.com/${redir_url}/` );
+		redir_url = ( redir_url === undefined ) ? 'https://ieeeunt.org/ntsas21_hubs/' : `https://hubs.mozilla.com/${redir_url}/`;
 
 
 		// Redirect to the Hubs room.
 		res.writeHead( 302, {
-			'Location': `https://hubs.mozilla.com/${redir_url}/`
+			'Location': `${redir_url}`
 		});
 		res.end();
 		return;
