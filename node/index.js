@@ -207,11 +207,13 @@ client.on("message", async function(message)
 	{
 		console.log( `Received link request. ${args[ 1 ]}` );
 
+		const usage = 'Usage:\n> **`!ntsas link <channel> <threshold> <server|main> <room_name>`**';
+
 		// Verify that we received a valid formatted channel.
 		if( !args[ 1 ] || !args[ 1 ].match( /<#[0-9]{18}>/ ) )
 		{
 			console.log( `Invalid channel.\n'${args[ 1 ]}'` );
-			message.channel.send( 'Please provide a valid channel.\n\nUsage:\n> **`!ntsas link <channel> <threshold> <room_name>`**' );
+			message.channel.send( `Please provide a valid channel.\n\n${usage}` );
 			return;
 		}
 
@@ -220,16 +222,25 @@ client.on("message", async function(message)
 		if( !args[ 2 ] || !args[ 2 ].match( /[0-9]+/ ) )
 		{
 			console.log( `Invalid threshold.\n'${args[ 2 ]}'` );
-			message.channel.send( 'Please provide a valid threshold.\n\nUsage:\n> **`!ntsas link <channel> <threshold> <room_name>`**' )
+			message.channel.send( `Please provide a valid threshold.\n\n${usage}` );
+			return;
+		}
+
+
+		// Verify that we have received a room type (sponsor|main).
+		if( args[ 3 ] || ( args[ 3 ] !== 'sponsor' && args[ 3 ] !== 'main' ) )
+		{
+			console.log( `Invalid type.\n'${args[ 3 ]}'` );
+			message.channel.send( `Please provide a valid type.\n\n${usage}` );
 			return;
 		}
 
 
 		// Verify that we have received a room name.
-		if( !args[ 3 ] )
+		if( !args[ 4 ] )
 		{
-			console.log( `Invalid room name.\n'${args[ 3 ]}'` );
-			message.channel.send( 'Please provide a room name.\n\nUsage:\n> **`!ntsas link <channel> <threshold> <room_name>`**' );
+			console.log( `Invalid room name.\n'${args[ 4 ]}'` );
+			message.channel.send( `Please provide a valid room name.\n\n${usage}` );
 			return;
 		}
 
@@ -265,6 +276,7 @@ client.on("message", async function(message)
 		// Discord topics, but could be added in the future, so we specify it here for completeness.
 		if( !newMessageChannel.topic || !newMessageChannel.topic.match( /https:\/\/hubs\.mozilla\.com\/[0-9A-Za-z]{7}\/*\/?/ ) )
 		{
+			/* This comment is here to fix vi syntax highlighting destroyed by the regex above. */
 			console.log( `Channel ${args[ 1 ]} is not linked with a Hubs room.` );
 			message.channel.send( `Channel ${args[ 1 ]} is not linked with a Hubs room.` );
 			return;
@@ -280,10 +292,14 @@ client.on("message", async function(message)
 		let threshold = parseInt( args[ 2 ] );
 
 
+		// Get the room type.
+		let type = args[ 3 ];
+
+
 		// Get the name of the room by combining the remaining arguments.
 		// Need to use all arguments to allow for spaces in the room name.
 		let name = '';
-		for( i = 3; i < args.length - 1; i++ )
+		for( i = 4; i < args.length - 1; i++ )
 		{
 			name += args[ i ] + " ";
 		}
@@ -330,6 +346,7 @@ client.on("message", async function(message)
 		let update = {
 			watching: 1,
 			name: name,
+			type: type,
 			channelID: newChannelID,
 			threshold: threshold,
 			image: imageURL
@@ -430,16 +447,17 @@ client.on("message", async function(message)
 	{
 		// USAGE: !ntsas update <channel-name> <field-to-update> <new-value>
 		// <new-value> is an attachment if <field-to-update> = image
-		let validFields = [ "name", "image", "threshold" ];
+		let validFields = [ "name", "image", "threshold", "type" ];
 
 		console.log( "Received update request." );
+		const usage = 'Usage:\n> **`!ntsas update <channel> <field-to-update: name|image|threshold|type> <new-value>`**';
 
 
 		// Verify the channel is in valid format.
 		if( !args[ 1 ] || !args[ 1 ].match( /<#[0-9]{18}>/ ) )
 		{
 			console.log( `Invalid channel.\n'${args[ 1 ]}'` );
-			message.channel.send( 'Please provide a valid channel.\n\nUsage:\n> **`!ntsas link <channel> <room_name> <threshold>`**' );
+			message.channel.send( `Please provide a valid channel.\n\n${usage}` );
 			return;
 		}
 
@@ -459,7 +477,7 @@ client.on("message", async function(message)
 		if( !args[ 2 ] || !validFields.includes( args[ 2 ] ) )
 		{
 			console.log( `Invalid field to update. '${args[ 2 ]}'` );
-			message.channel.send( `Invalid field to update. '${args[ 2 ]}'` );
+			message.channel.send( `Invalid field to update. '${args[ 2 ]}'.\n\n${usage}` );
 			return;
 		}
 
@@ -467,8 +485,8 @@ client.on("message", async function(message)
 		// Verify the new value exists (if not image type)
 		if( !args[ 2 ] && args[ 1 ] !== 'image' )
 		{
-			console.log( 'No updated value.' );
-			message.channel.send( 'No updated value.' );
+			console.log( 'No updated image.' );
+			message.channel.send( 'No updated image.' );
 			return;
 		}
 
@@ -497,6 +515,15 @@ client.on("message", async function(message)
 		{
 			console.log( 'Image attachment is not a png.' );
 			message.channel.send( 'Please provide a png attachment.' );
+			return;
+		}
+
+
+		// If update type is type, verify it is 'sponsor' or 'main'.
+		if( args[ 2 ] === 'type' && args[ 3 ] !== 'sponsor' && args[ 3 ] !== 'main' )
+		{
+			console.log( `Invalid type update. '${args[ 3 ]}'` );
+			message.channel.send( `Invalid type update. '${args[ 3 ]}'.\n\n${usage}` );
 			return;
 		}
 
@@ -542,6 +569,10 @@ client.on("message", async function(message)
 		{
 			update.threshold = parseInt( args[ 3 ] );
 		}
+		else if( args[ 2 ] === 'type' )
+		{
+			update.type = args[ 3 ];
+		}
 
 
 		// Update the room with matching room URL ID. Upsert = false so we do not
@@ -549,11 +580,12 @@ client.on("message", async function(message)
 		let updatedRoom = ( await mongoLib.updateHubsMany( url, update, false ) ).value;
 		console.log( JSON.stringify( updatedRoom, null, 2 ) );
 		let response = `Updated Room:\n` +
-						`**Name:** ${updatedRoom.name}\n` +
-						`**Threshold:** ${updatedRoom.threshold}\n` +
-						`**Preview Image:** ${updatedRoom.image}\n` +
-						`**Channel:** ${updatedRoom.channelID}`;
-		console.log( response );
+				`**Name:** ${updatedRoom.name}\n` +
+				`**Threshold:** ${updatedRoom.threshold}\n` +
+				`**Type:** ${updatedRoom.type}\n` +
+				`**Preview Image:** ${updatedRoom.image}\n` +
+				`**Channel:** ${updatedRoom.channelID}`;
+
 		message.channel.send( response );
 	}
 	else if( args[ 0 ] === "watch" )
@@ -736,12 +768,12 @@ client.on("message", async function(message)
 		let helpMessage = 
 			"North Tech-SAS Hubs Bot Commands:\n\n" +
 			">>> " +
-			"**`!ntsas link <channel> <threshold> <room_name>`**\n" + 
-					"Add a new Hubs-connected channel to the checking list with an integer user threshold count and name the room. Provide an attachment .png image to the message to specify a preview image for the website.\n\n" +
+			"**`!ntsas link <channel> <threshold> <type> <room_name>`**\n" + 
+					"Add a new Hubs-connected channel to the checking list with an integer user threshold count and name the room. Type is 'sponsor' or 'main'. Provide an attachment .png image to the message to specify a preview image for the website.\n\n" +
 			"**`!ntsas unlink <channel>`**\n" + 
 					"Remove a Hubs-connected channel from the checking list.\n\n" +
 			"**`!ntsas update <channel> <field-to-update> <new-value>`**\n" + 
-					"Updated a Hubs room information. Valid values for <field-to-update> are `name`, `image`, and `threshold`. If `image`, provide an attachment and <new-value> can be blank.\n\n" +
+					"Update a Hubs room's information. Valid values for <field-to-update> are `name`, `image`, `threshold`, and `type`. If `image`, provide an attachment and <new-value> can be blank.\n\n" +
 			"**`!ntsas status`**\n" + 
 					"Check the occupancy status of the rooms currently being watched.\n\n" +
 			"**`!ntsas watch`**\n" + 
