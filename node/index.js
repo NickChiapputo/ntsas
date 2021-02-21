@@ -576,9 +576,8 @@ client.on("message", async function(message)
 
 
 		// Update the room with matching room URL ID. Upsert = false so we do not
-		// create a new room if we don't have a previous entry fo rit.
+		// create a new room if we don't have a previous entry for it.
 		let updatedRoom = ( await mongoLib.updateHubsMany( url, update, false ) ).value;
-		console.log( JSON.stringify( updatedRoom, null, 2 ) );
 		let response = `Updated Room:\n` +
 				`**Name:** ${updatedRoom.name}\n` +
 				`**Threshold:** ${updatedRoom.threshold}\n` +
